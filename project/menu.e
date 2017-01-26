@@ -1,37 +1,19 @@
 note
-	Description: "An audio player that can manage playlist"
-	Author: "Louis Marchand"
-	Date: "Thu, 26 Jan 2017 00:42:10 +0000"
-	Revision: "0.1"
+	description: "Manage the visual interface"
+	author: "Louis Marchand"
+	date: "Thu, 26 Jan 2017 00:42:10 +0000"
+	revision: "0.1"
 
 class
-	APPLICATION
+	MENU
 
-create
-	make
+feature {ANY} -- Access
 
-feature {NONE} -- Initialization
-
-	make
-			-- Run application.
+	run
+			-- Execute the graphical interface
 		do
-			create menu
-			create player
-			player.launch_thread
-			menu.run
-			player.stop_thread
-			player.join_thread
 
 		end
-
-	menu:MENU
-			-- Manage the visual interface
-
-	player:PLAYER
-			-- Control and play the music
-
-invariant
-
 
 note
 	License: "[

@@ -1,11 +1,14 @@
 note
-	Description: "An audio player that can manage playlist"
-	Author: "Louis Marchand"
-	Date: "Thu, 26 Jan 2017 00:42:10 +0000"
-	Revision: "0.1"
+	description: "Game2 root class to initialize and close internal libraries"
+	author: "Louis Marchand"
+	date: "Thu, 26 Jan 2017 00:42:10 +0000"
+	revision: "1.0"
 
 class
-	APPLICATION
+	GAME2_APPLICATION
+
+inherit
+	AUDIO_LIBRARY_SHARED
 
 create
 	make
@@ -13,25 +16,18 @@ create
 feature {NONE} -- Initialization
 
 	make
-			-- Run application.
+			-- Initialization of the external libraries and launch the {APPLICATION}
+		local
+			l_application:detachable APPLICATION
+			l_memory:MEMORY
 		do
-			create menu
-			create player
-			player.launch_thread
-			menu.run
-			player.stop_thread
-			player.join_thread
-
+			audio_library.enable_sound
+			create l_application.make
+			l_application := Void
+			create l_memory
+			l_memory.full_collect
+			audio_library.quit_library
 		end
-
-	menu:MENU
-			-- Manage the visual interface
-
-	player:PLAYER
-			-- Control and play the music
-
-invariant
-
 
 note
 	License: "[
