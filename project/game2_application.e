@@ -18,11 +18,11 @@ feature {NONE} -- Initialization
 	make
 			-- Initialization of the external libraries and launch the {APPLICATION}
 		local
-			l_application:detachable APPLICATION
+			l_application:detachable VISION2_APPLICATION
 			l_memory:MEMORY
 		do
 			audio_library.enable_sound
-			create l_application.make
+			create l_application.make_and_launch
 			l_application := Void
 			create l_memory
 			l_memory.full_collect
