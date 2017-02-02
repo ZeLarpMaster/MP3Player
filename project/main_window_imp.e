@@ -40,12 +40,13 @@ feature {NONE}-- Initialization
 			l_ev_horizontal_box_3.extend (play_button)
 			l_ev_horizontal_box_3.extend (pause_button)
 			l_ev_horizontal_box_3.extend (next_button)
-			l_ev_horizontal_box_3.extend (random_button)
+			l_ev_horizontal_box_3.extend (shuffle_button)
 			l_ev_horizontal_box_3.extend (volume_range)
 
 			title_label.set_text ("La toune")
 			l_ev_horizontal_box_2.disable_item_expand (timer_label)
 			timer_label.set_text ("3:20")
+			volume_range.set_minimum_width (100)
 			volume_range.set_value (100)
 			set_title ("Display window")
 
@@ -58,7 +59,7 @@ feature {NONE}-- Initialization
 			play_button.select_actions.extend (agent play_button_select_actions)
 			pause_button.select_actions.extend (agent pause_button_select_actions)
 			next_button.select_actions.extend (agent next_button_select_actions)
-			random_button.select_actions.extend (agent random_button_select_actions)
+			shuffle_button.select_actions.extend (agent shuffle_button_select_actions)
 			volume_range.change_actions.extend (agent volume_range_change_actions (?))
 				-- Close the application when an interface close
 				-- request is received on `Current'. i.e. the cross is clicked.
@@ -85,7 +86,7 @@ feature {NONE}-- Initialization
 			create play_button
 			create pause_button
 			create next_button
-			create random_button
+			create shuffle_button
 			create volume_range
 
 			create string_constant_set_procedures.make (10)
@@ -111,7 +112,7 @@ feature -- Access
 	progress_range, volume_range: EV_HORIZONTAL_RANGE
 	open_button, previous_button,
 	play_button, pause_button, next_button: EV_BUTTON
-	random_button: EV_TOGGLE_BUTTON
+	shuffle_button: EV_TOGGLE_BUTTON
 
 feature {NONE} -- Implementation
 
@@ -166,8 +167,8 @@ feature {NONE} -- Implementation
 		deferred
 		end
 	
-	random_button_select_actions
-			-- Called by `select_actions' of `random_button'.
+	shuffle_button_select_actions
+			-- Called by `select_actions' of `shuffle_button'.
 		deferred
 		end
 	

@@ -26,6 +26,12 @@ feature {NONE} -- Initialization
 			-- and from within current class itself.
 		do
 				-- Initialize types defined in current class
+				open_button.set_pixmap ((create {OPEN_PIXEL_BUFFER}.make).to_pixmap)
+				play_button.set_pixmap ((create {PLAY_PIXEL_BUFFER}.make).to_pixmap)
+				next_button.set_pixmap ((create {NEXT_PIXEL_BUFFER}.make).to_pixmap)
+				previous_button.set_pixmap ((create {PREVIOUS_PIXEL_BUFFER}.make).to_pixmap)
+				pause_button.set_pixmap ((create {PAUSE_PIXEL_BUFFER}.make).to_pixmap)
+				shuffle_button.set_pixmap ((create {SHUFFLE_PIXEL_BUFFER}.make).to_pixmap)
 		end
 
 feature {NONE} -- Implementation
@@ -72,8 +78,8 @@ feature {NONE} -- Implementation
 		do
 		end
 
-	random_button_select_actions
-			-- Called by `select_actions` of random_button.
+	shuffle_button_select_actions
+			-- Called by `select_actions` of shuffle_button.
 		do
 		end
 

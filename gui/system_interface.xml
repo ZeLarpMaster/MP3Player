@@ -292,7 +292,7 @@
     <item type="EV_TOGGLE_BUTTON">
      <Internal_properties>
       <id>16</id>
-      <name>random_button</name>
+      <name>shuffle_button</name>
       <Expanded>0</Expanded>
      </Internal_properties>
      <EV_COLORIZABLE>
@@ -314,7 +314,7 @@
      <EV_PIXMAPABLE>
      </EV_PIXMAPABLE>
      <Events>
-      <Event>select_actions EV_BUTTON_ACTION_SEQUENCES random_button_select_actions</Event>
+      <Event>select_actions EV_BUTTON_ACTION_SEQUENCES shuffle_button_select_actions</Event>
      </Events>
     </item>
     <item type="EV_HORIZONTAL_RANGE">
@@ -330,6 +330,7 @@
      <EV_TOOLTIPABLE>
      </EV_TOOLTIPABLE>
      <EV_WIDGET>
+      <Minimum_width>100</Minimum_width>
      </EV_WIDGET>
      <EV_GAUGE>
       <Value>100</Value>
