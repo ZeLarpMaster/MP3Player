@@ -19,6 +19,8 @@ feature {NONE} -- Initialization
 			-- Initialization for these objects must be performed in `user_initialization'.
 		do
 				-- Create attached types defined in class here, initialize them in `user_initialization'.
+				create player
+				player.add_folder("D:\Musique Test")
 		end
 
 	user_initialization
@@ -83,6 +85,7 @@ feature {NONE} -- Implementation
 		do
 		end
 
-
+	player: PLAYER
+			-- The sound manager and playlist holder
 
 end

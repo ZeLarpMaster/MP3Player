@@ -34,6 +34,25 @@ feature {ANY} -- Access
 			play_list.extend(a_file)
 		end
 
+	add_folder(a_folder:READABLE_STRING_GENERAL)
+			-- Recursively open files in `a_folder' and it's sub-folders into `play_list'
+		local
+			l_path: PATH
+			l_folder: DIRECTORY
+		do
+			create l_path.make_from_string(a_folder)
+			create l_folder.make_with_path(l_path)
+			across l_folder.entries as la_entries loop
+				if attached {IMMUTABLE_STRING_32} la_entries.item.extension as la_extension then
+					if la_extension ~ "mp3" then
+						play_list.extend(l_path.extended(la_entries.item.name).name)
+					end
+				elseif not (la_entries.item.name ~ "." or la_entries.item.name ~ "..") then
+					add_folder(l_path.extended(la_entries.item.name).name)
+				end
+			end
+		end
+
 	play
 			-- Resume (or start) playing the `music'
 		do
@@ -47,7 +66,7 @@ feature {ANY} -- Access
 		end
 
 	pause
-			-- Temporarry stop playing the `music'
+			-- Temporarly stop playing the `music'
 		do
 			source.pause
 		end
