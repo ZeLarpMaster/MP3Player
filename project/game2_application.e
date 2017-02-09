@@ -9,6 +9,7 @@ class
 
 inherit
 	AUDIO_LIBRARY_SHARED
+	MPG_LIBRARY_SHARED
 
 create
 	make
@@ -21,12 +22,14 @@ feature {NONE} -- Initialization
 			l_application:detachable VISION2_APPLICATION
 			l_memory:MEMORY
 		do
+			mpg_library.enable_mpg
 			audio_library.enable_sound
 			create l_application.make_and_launch
 			l_application := Void
 			create l_memory
 			l_memory.full_collect
 			audio_library.quit_library
+			mpg_library.quit_library
 		end
 
 note

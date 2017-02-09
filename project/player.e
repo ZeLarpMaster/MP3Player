@@ -21,34 +21,41 @@ feature {NONE} -- Initialization
 	default_create
 			-- Initialization of `Current'
 		do
+			create error.make
 			audio_library.sources_add
 			source := audio_library.last_source_added
-			create {LINKED_LIST[READABLE_STRING_GENERAL]} play_list.make
+			if not source.is_open then
+				error.set_source_closed_error
+			end
+			create {LINKED_LIST[READABLE_STRING_GENERAL]} song_list.make
+			create {LINKED_QUEUE[READABLE_STRING_GENERAL]} song_dispenser.make
 		end
 
 feature {ANY} -- Access
 
-	add_file(a_file:READABLE_STRING_GENERAL)
-			-- Open `a_file' in `music'
+	add_file(a_file: READABLE_STRING_GENERAL)
+			-- Add `a_file' to the `song_list'
 		do
-			play_list.extend(a_file)
+			song_list.extend(a_file)
 		end
 
-	add_folder(a_folder:READABLE_STRING_GENERAL)
+	add_folder(a_folder: READABLE_STRING_GENERAL)
 			-- Recursively open files in `a_folder' and it's sub-folders into `play_list'
 		local
 			l_path: PATH
 			l_folder: DIRECTORY
+			l_file: RAW_FILE
 		do
 			create l_path.make_from_string(a_folder)
 			create l_folder.make_with_path(l_path)
 			across l_folder.entries as la_entries loop
-				if attached {IMMUTABLE_STRING_32} la_entries.item.extension as la_extension then
-					if la_extension ~ "mp3" then
-						play_list.extend(l_path.extended(la_entries.item.name).name)
+				if not (la_entries.item.is_current_symbol or la_entries.item.is_parent_symbol) then
+					create l_file.make_with_path(l_path.extended(la_entries.item.name))
+					if l_file.is_directory then
+						add_folder(l_path.extended(la_entries.item.name).name)
+					elseif is_supported_audio_file(l_path.extended(la_entries.item.name).name) then
+						song_list.extend(l_path.extended(la_entries.item.name).name)
 					end
-				elseif not (la_entries.item.name ~ "." or la_entries.item.name ~ "..") then
-					add_folder(l_path.extended(la_entries.item.name).name)
 				end
 			end
 		end
@@ -56,6 +63,9 @@ feature {ANY} -- Access
 	play
 			-- Resume (or start) playing the `music'
 		do
+			if source.sound_queued.is_empty then
+				next_song
+			end
 			source.play
 		end
 
@@ -71,21 +81,93 @@ feature {ANY} -- Access
 			source.pause
 		end
 
-	music: detachable AUDIO_SOUND
-			-- What is presently played by `Current'
+	next
+			-- Move to the next song
+		do
+			next_song
+		end
 
-	play_list:LIST[READABLE_STRING_GENERAL]
-			-- The list of all music file to play
+	toggle_random
+			-- Toggles the randomness of `song_dispenser'
+		do
+			if attached {RANDOM_BAG[READABLE_STRING_GENERAL]} song_dispenser then
+				create {LINKED_QUEUE[READABLE_STRING_GENERAL]} song_dispenser.make
+			else
+				create {RANDOM_BAG[READABLE_STRING_GENERAL]} song_dispenser.make(song_list.count)
+			end
+			refill_dispenser
+		end
+
+	update
+			-- Update the audio `source'
+		do
+			source.update_playing
+		end
 
 feature {NONE} -- Implementation
 
-	play_next_music
-			-- Get the next sound from `play_list' and put it in `music'
+	is_supported_audio_file(a_file: READABLE_STRING_GENERAL): BOOLEAN
+			-- Check whether or not `a_file' is a supported audio file
+		local
+			l_audio: AUDIO_SOUND_FILE
+			l_mp3: MPG_SOUND_FILE
 		do
+			Result := False
+			create l_audio.make(a_file)
+			if l_audio.is_openable then
+				l_audio.open
+				Result := l_audio.is_open
+			end
+			if not Result then
+				create l_mp3.make(a_file)
+				if l_mp3.is_openable then
+					l_mp3.open
+					Result := l_mp3.is_open
+				end
+			end
 		end
 
-	source:AUDIO_SOURCE
+	refill_dispenser
+			-- Refills `song_dispenser' with songs taken from `song_list'
+		do
+			song_dispenser.fill(song_list)
+		end
+
+	next_song
+			-- Move to the next song in the `song_dispenser'
+		do
+			if song_dispenser.is_empty then
+				refill_dispenser
+			else
+				song_dispenser.remove
+			end
+			create song_file.make(song_dispenser.item)
+			if attached song_file as la_song_file and then la_song_file.is_openable then
+				la_song_file.open
+				if not la_song_file.is_open then
+					error.set_loading_audio_error
+				else
+					source.queue_sound(la_song_file)
+				end
+			else
+				error.set_loading_audio_error
+			end
+		end
+
+	song_dispenser: DISPENSER[READABLE_STRING_GENERAL]
+			-- Dispenser of songs to play
+
+	song_list: LINKED_LIST[READABLE_STRING_GENERAL]
+			-- The list of all music files to play
+
+	source: AUDIO_SOURCE
 			-- The source of audio
+
+	song_file: detachable AUDIO_SOUND_FILE
+			-- The current audio sound file
+
+	error: ERROR_CODE
+			-- The current error code of `Current'
 
 invariant
 

@@ -60,18 +60,21 @@ feature {NONE} -- Implementation
 	play_button_select_actions
 			-- Called by `select_actions' of `play_button'.
 		do
+			player.play
 		end
 
 
 	pause_button_select_actions
 			-- Called by `select_actions' of `pause_button'.
 		do
+			player.pause
 		end
 
 
 	next_button_select_actions
 			-- Called by `select_actions' of `next_button'.
 		do
+			player.next
 		end
 
 
@@ -83,6 +86,7 @@ feature {NONE} -- Implementation
 	shuffle_button_select_actions
 			-- Called by `select_actions` of shuffle_button.
 		do
+			player.toggle_random
 		end
 
 	player: PLAYER
