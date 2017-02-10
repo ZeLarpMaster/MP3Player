@@ -127,7 +127,9 @@ feature	{NONE} -- Implementation
 			-- Go to the next `item'
 		do
 			ordering.forth
-			internal_list.go_i_th((ordering.item \\ internal_list.count) + 1)
+			if not internal_list.is_empty then
+				internal_list.go_i_th((ordering.item \\ internal_list.count) + 1)
+			end
 		end
 
 	internal_list: ARRAYED_LIST[G]

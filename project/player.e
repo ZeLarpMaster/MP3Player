@@ -26,9 +26,13 @@ feature {NONE} -- Initialization
 			source := audio_library.last_source_added
 			if not source.is_open then
 				error.set_source_closed_error
+			else
+				source.set_gain(0.1)
 			end
 			create {LINKED_LIST[READABLE_STRING_GENERAL]} song_list.make
 			create {LINKED_QUEUE[READABLE_STRING_GENERAL]} song_dispenser.make
+			create previous_songs.make
+			create song_changes_actions
 		end
 
 feature {ANY} -- Access
@@ -63,10 +67,12 @@ feature {ANY} -- Access
 	play
 			-- Resume (or start) playing the `music'
 		do
-			if source.sound_queued.is_empty then
-				next_song
+			if not source.is_playing then
+				if source.sound_queued.is_empty then
+					next_song
+				end
+				source.play
 			end
-			source.play
 		end
 
 	stop
@@ -84,7 +90,23 @@ feature {ANY} -- Access
 	next
 			-- Move to the next song
 		do
+			source.stop
 			next_song
+		end
+
+	previous
+			-- Move to the last played song
+		do
+			if not previous_songs.is_empty then
+				source.stop
+				previous_song
+			end
+		end
+
+	set_gain(a_value: REAL_32)
+			-- Set the gain of `source'
+		do
+			source.set_gain(a_value)
 		end
 
 	toggle_random
@@ -101,8 +123,19 @@ feature {ANY} -- Access
 	update
 			-- Update the audio `source'
 		do
-			source.update_playing
+			if source.is_open and not source.sound_queued.is_empty then
+				source.update_playing
+			end
+
+			if attached song_file as la_song_file and then la_song_file.has_error then
+				-- Give an error to the song and remove it from `song_list'
+				-- Unless it's because the song ended
+				next_song
+			end
 		end
+
+	song_changes_actions: ACTION_SEQUENCE[TUPLE[READABLE_STRING_GENERAL]]
+			-- Called when `Current's song changes
 
 feature {NONE} -- Implementation
 
@@ -127,6 +160,33 @@ feature {NONE} -- Implementation
 			end
 		end
 
+	get_audio_sound(a_file: READABLE_STRING_GENERAL): detachable AUDIO_SOUND
+			-- Returns the appropriate {AUDIO_SOUND} implementation for `a_file'
+		local
+			l_audio: AUDIO_SOUND_FILE
+			l_mp3: MPG_SOUND_FILE
+		do
+			create l_mp3.make(a_file)
+			if l_mp3.is_openable then
+				l_mp3.open
+				if l_mp3.is_open then
+					Result := l_mp3
+				end
+			end
+			if not attached Result then
+				create l_audio.make(a_file)
+				if l_audio.is_openable then
+					l_audio.open
+					if l_audio.is_open then
+						Result := l_audio
+					end
+				end
+			end
+			if not attached Result then
+				error.set_unsupported_format_error
+			end
+		end
+
 	refill_dispenser
 			-- Refills `song_dispenser' with songs taken from `song_list'
 		do
@@ -139,20 +199,33 @@ feature {NONE} -- Implementation
 			if song_dispenser.is_empty then
 				refill_dispenser
 			else
+				previous_songs.extend(song_dispenser.item)
 				song_dispenser.remove
 			end
-			create song_file.make(song_dispenser.item)
-			if attached song_file as la_song_file and then la_song_file.is_openable then
-				la_song_file.open
-				if not la_song_file.is_open then
-					error.set_loading_audio_error
-				else
-					source.queue_sound(la_song_file)
-				end
+			song_file := get_audio_sound(song_dispenser.item)
+			if attached song_file as la_song_file and then la_song_file.is_open then
+				source.queue_sound(la_song_file)
+				song_changes_actions.call(song_dispenser.item)
 			else
 				error.set_loading_audio_error
 			end
 		end
+
+	previous_song
+			-- Play the latest previously played song from `previous_songs'
+		require
+			SongsPlayedBefore: not previous_songs.is_empty
+		do
+			song_file := get_audio_sound(previous_songs.item)
+			if attached song_file as la_song_file and then la_song_file.is_open then
+				source.queue_sound(la_song_file)
+				song_changes_actions.call(previous_songs.item)
+			end
+			previous_songs.remove
+		end
+
+	previous_songs: LINKED_STACK[READABLE_STRING_GENERAL]
+			-- List of previously played songs
 
 	song_dispenser: DISPENSER[READABLE_STRING_GENERAL]
 			-- Dispenser of songs to play
@@ -163,7 +236,7 @@ feature {NONE} -- Implementation
 	source: AUDIO_SOURCE
 			-- The source of audio
 
-	song_file: detachable AUDIO_SOUND_FILE
+	song_file: detachable AUDIO_SOUND
 			-- The current audio sound file
 
 	error: ERROR_CODE

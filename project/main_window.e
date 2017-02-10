@@ -19,8 +19,10 @@ feature {NONE} -- Initialization
 			-- Initialization for these objects must be performed in `user_initialization'.
 		do
 				-- Create attached types defined in class here, initialize them in `user_initialization'.
+				create timer.make_with_interval(10)
 				create player
 				player.add_folder("D:\Musique Test")
+				timer.actions.extend(agent player.update)
 		end
 
 	user_initialization
@@ -34,6 +36,8 @@ feature {NONE} -- Initialization
 				previous_button.set_pixmap ((create {PREVIOUS_PIXEL_BUFFER}.make).to_pixmap)
 				pause_button.set_pixmap ((create {PAUSE_PIXEL_BUFFER}.make).to_pixmap)
 				shuffle_button.set_pixmap ((create {SHUFFLE_PIXEL_BUFFER}.make).to_pixmap)
+				volume_range.set_value(15)
+				player.song_changes_actions.extend(agent update_song_name)
 		end
 
 feature {NONE} -- Implementation
@@ -54,6 +58,7 @@ feature {NONE} -- Implementation
 	previous_button_select_actions
 			-- Called by `select_actions' of `previous_button'.
 		do
+			player.previous
 		end
 
 
@@ -80,7 +85,13 @@ feature {NONE} -- Implementation
 
 	volume_range_change_actions (a_value: INTEGER)
 			-- Called by `change_actions' of `volume_range'.
+		local
+			l_value: REAL_64
+			l_player_value: REAL_64
 		do
+			l_value := a_value.quotient(volume_range.value_range.upper)
+			l_player_value := (2.0 ^ l_value) - 1
+			player.set_gain(l_player_value.truncated_to_real)
 		end
 
 	shuffle_button_select_actions
@@ -89,7 +100,21 @@ feature {NONE} -- Implementation
 			player.toggle_random
 		end
 
+	update_song_name(a_file: READABLE_STRING_GENERAL)
+			-- Called by `song_changes_actions' of `player'.
+		local
+			l_path: PATH
+		do
+			create l_path.make_from_string(a_file)
+			title_label.set_text(l_path.out)
+		end
+
 	player: PLAYER
 			-- The sound manager and playlist holder
+
+feature {NONE} -- Implementation
+
+	timer: EV_TIMEOUT
+			-- Calls `on_update' regularly
 
 end

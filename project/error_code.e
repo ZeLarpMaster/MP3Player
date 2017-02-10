@@ -38,6 +38,12 @@ feature {ANY} -- Access
 			internal_error_code := 2
 		end
 
+	set_unsupported_format_error
+			-- Sets `Current' to represent the sound file is in an unsupported format
+		do
+			internal_error_code := 3
+		end
+
 	is_no_error: BOOLEAN
 			-- Whether or not `Current' means no error
 		do
@@ -51,9 +57,15 @@ feature {ANY} -- Access
 		end
 
 	is_source_closed_error: BOOLEAN
-			-- Whether or not `Current' meanst the audio source isn't open
+			-- Whether or not `Current' means the audio source isn't open
 		do
 			Result := internal_error_code = 2
+		end
+
+	is_unsupported_format_error: BOOLEAN
+			-- Whether or not `Current' means the sound file is in an unsupported format
+		do
+			Result := internal_error_code = 3
 		end
 
 feature {NONE} -- Implementation
