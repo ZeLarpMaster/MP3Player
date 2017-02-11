@@ -51,7 +51,12 @@ feature {NONE} -- Implementation
 
 	open_button_select_actions
 			-- Called by `select_actions' of `open_button'.
+		local
+			l_dialog: EV_DIRECTORY_DIALOG
 		do
+			create l_dialog.make_with_title("Choisir un dossier")
+			l_dialog.ok_actions.extend(agent open_folder_action(l_dialog))
+			l_dialog.show_modal_to_window(Current)
 		end
 
 
@@ -107,6 +112,14 @@ feature {NONE} -- Implementation
 		do
 			create l_path.make_from_string(a_file)
 			title_label.set_text(l_path.out)
+		end
+
+	open_folder_action(a_dialog: EV_DIRECTORY_DIALOG)
+			-- Called when the user selects a folder
+		do
+			if not a_dialog.directory.is_empty then
+				player.add_folder(a_dialog.directory)
+			end
 		end
 
 	player: PLAYER
