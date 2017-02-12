@@ -21,7 +21,6 @@ feature {NONE} -- Initialization
 				-- Create attached types defined in class here, initialize them in `user_initialization'.
 				create timer.make_with_interval(10)
 				create player
-				player.add_folder("D:\Musique Test")
 				timer.actions.extend(agent player.update)
 		end
 
