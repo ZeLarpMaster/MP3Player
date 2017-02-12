@@ -67,7 +67,7 @@ feature {ANY} -- Access
 	play
 			-- Resume (or start) playing the `music'
 		do
-			if not source.is_playing then
+			if not source.is_playing and not song_dispenser.is_empty then
 				if source.sound_queued.is_empty then
 					next_song
 				end
@@ -91,7 +91,9 @@ feature {ANY} -- Access
 			-- Move to the next song
 		do
 			source.stop
-			next_song
+			if not song_dispenser.is_empty and not song_list.is_empty then
+				next_song
+			end
 		end
 
 	previous
@@ -196,11 +198,12 @@ feature {NONE} -- Implementation
 	next_song
 			-- Move to the next song in the `song_dispenser'
 		do
-			if song_dispenser.is_empty then
-				refill_dispenser
-			else
+			if not song_dispenser.is_empty then
 				previous_songs.extend(song_dispenser.item)
 				song_dispenser.remove
+			end
+			if song_dispenser.is_empty then
+				refill_dispenser
 			end
 			song_file := get_audio_sound(song_dispenser.item)
 			if attached song_file as la_song_file and then la_song_file.is_open then
