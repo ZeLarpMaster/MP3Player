@@ -110,7 +110,7 @@ feature {NONE} -- Implementation
 			l_path: PATH
 		do
 			create l_path.make_from_string(a_file)
-			title_label.set_text(l_path.out)
+			title_label.set_text(l_path.name)
 		end
 
 	open_folder_action(a_dialog: EV_DIRECTORY_DIALOG)
