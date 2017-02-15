@@ -67,7 +67,7 @@ feature {ANY} -- Access
 	play
 			-- Resume (or start) playing the `music'
 		do
-			if not source.is_playing and not song_dispenser.is_empty then
+			if not source.is_playing then
 				if source.sound_queued.is_empty then
 					next_song
 				end
