@@ -20,9 +20,12 @@ feature {NONE} -- Initialization
 
 	make(a_size: INTEGER)
 			-- Initialization of an empty `Current'
+		local
+			l_date_time: DATE_TIME
 		do
+			create l_date_time.make_now_utc
 			create internal_list.make(a_size)
-			create ordering.make
+			create ordering.set_seed(l_date_time.days * l_date_time.seconds_in_day + l_date_time.seconds)
 		end
 
 feature {ANY} -- Access
