@@ -36,7 +36,7 @@ feature {NONE} -- Initialization
 				pause_button.set_pixmap ((create {PAUSE_PIXEL_BUFFER}.make).to_pixmap)
 				shuffle_button.set_pixmap ((create {SHUFFLE_PIXEL_BUFFER}.make).to_pixmap)
 				volume_range.set_value(15)
-				player.song_changes_actions.extend(agent update_song_name)
+				player.song_changes_actions.extend(agent update_song)
 		end
 
 feature {NONE} -- Implementation
@@ -104,12 +104,12 @@ feature {NONE} -- Implementation
 			player.toggle_random
 		end
 
-	update_song_name(a_file: READABLE_STRING_GENERAL)
+	update_song(a_song: SONG)
 			-- Called by `song_changes_actions' of `player'.
 		local
 			l_path: PATH
 		do
-			create l_path.make_from_string(a_file)
+			create l_path.make_from_string(a_song.file_path)
 			title_label.set_text(l_path.name)
 		end
 

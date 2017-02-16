@@ -44,6 +44,12 @@ feature {ANY} -- Access
 			internal_error_code := 3
 		end
 
+	set_failed_opening_audio_error
+			-- Sets `Current' to represent the sound file failed to open
+		do
+			internal_error_code := 4
+		end
+
 	is_no_error: BOOLEAN
 			-- Whether or not `Current' means no error
 		do
@@ -66,6 +72,12 @@ feature {ANY} -- Access
 			-- Whether or not `Current' means the sound file is in an unsupported format
 		do
 			Result := internal_error_code = 3
+		end
+
+	is_failed_opening_audio_error: BOOLEAN
+			-- Whether or not `Current' means the sound file failed to open
+		do
+			Result := internal_error_code = 4
 		end
 
 feature {NONE} -- Implementation
