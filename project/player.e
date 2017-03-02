@@ -28,25 +28,24 @@ feature {NONE} -- Initialization
 			if not source.is_open then
 				error.set_source_closed_error
 			end
-			create {LINKED_LIST[SONG]} song_list.make
+			create playing_song_list.make
+			create {LINKED_LIST[SONG]} original_song_list.make
 			create {LINKED_QUEUE[SONG]} song_dispenser.make
 			create previous_songs.make
 			create song_changes_actions
+			is_playing := False
 		end
 
 feature {ANY} -- Access
 
 	open_file(a_file: READABLE_STRING_GENERAL)
-			-- Add `a_file' to the `song_list'
+			-- Add `a_file' to the `original_song_list'
 		do
 			add_file(a_file)
-			if source.is_initial and not source.is_playing then
-				play
-			end
 		end
 
 	add_folder(a_folder: READABLE_STRING_GENERAL)
-			-- Recursively open files in `a_folder' and it's sub-folders into `song_list'
+			-- Recursively open files in `a_folder' and it's sub-folders into `original_song_list'
 		local
 			l_path: PATH
 			l_folder: DIRECTORY
@@ -64,9 +63,6 @@ feature {ANY} -- Access
 					end
 				end
 			end
-			if source.is_initial and not source.is_playing then
-				play
-			end
 		end
 
 	play
@@ -77,6 +73,7 @@ feature {ANY} -- Access
 					next_song
 				end
 				source.play
+				is_playing := True
 			end
 		end
 
@@ -84,19 +81,21 @@ feature {ANY} -- Access
 			-- Completely stop playing the `music'
 		do
 			source.stop
+			is_playing := False
 		end
 
 	pause
 			-- Temporarly stop playing the `music'
 		do
 			source.pause
+			is_playing := False
 		end
 
 	next
 			-- Move to the next song
 		do
 			source.stop
-			if not song_dispenser.is_empty and not song_list.is_empty then
+			if not song_dispenser.is_empty and not original_song_list.is_empty then
 				next_song
 				source.play
 			end
@@ -122,33 +121,38 @@ feature {ANY} -- Access
 			-- Toggles the randomness of `song_dispenser'
 		do
 			if attached {RANDOM_BAG[SONG]} song_dispenser then
-				create {LINKED_QUEUE[SONG]} song_dispenser.make
+				song_dispenser := playing_song_list
 			else
-				create {RANDOM_BAG[SONG]} song_dispenser.make(song_list.count)
+				create {RANDOM_BAG[SONG]} song_dispenser.make(original_song_list.count)
+				refill_dispenser
 			end
-			refill_dispenser
 		end
 
 	update
 			-- Update the audio `source'
 		do
-			if source.is_open and not source.sound_queued.is_empty then
-				source.update_playing
-			end
+			if is_playing then
+				if source.is_open and not source.sound_queued.is_empty then
+					source.update_playing
+				end
 
-			if
-				not song_dispenser.is_empty and then
-				attached song_dispenser.item.sound as la_song_file and then
-				la_song_file.has_error
-			then
-				-- Give an error to the song and remove it from `song_list'
-				-- Unless it's because the song ended
-				next_song
+				if not source.is_playing then
+					if song_dispenser.is_empty then
+						is_playing := False
+					else
+						next_song
+						play
+					end
+					-- TODO: Remove the song if it has an error?
+				end
 			end
 		end
 
 	song_changes_actions: ACTION_SEQUENCE[TUPLE[SONG]]
 			-- Called when `Current's song changes
+
+	is_playing: BOOLEAN
+			-- Whether or not the player should be currently playing
 
 feature {NONE} -- Implementation
 
@@ -158,17 +162,18 @@ feature {NONE} -- Implementation
 			l_song: SONG
 		do
 			create l_song.make_from_string(a_file)
-			if l_song.error.is_no_error then
-				song_list.extend(l_song)
+			if l_song.is_valid then
+				original_song_list.extend(l_song)
+				playing_song_list.extend(l_song)
 			else
 				error.set_loading_audio_error
 			end
 		end
 
 	refill_dispenser
-			-- Refills `song_dispenser' with songs taken from `song_list'
+			-- Refills `song_dispenser' with songs taken from `original_song_list'
 		do
-			song_dispenser.fill(song_list)
+			song_dispenser.fill(original_song_list)
 		end
 
 	next_song
@@ -181,8 +186,13 @@ feature {NONE} -- Implementation
 			if song_dispenser.is_empty then
 				refill_dispenser
 			end
-			if attached song_dispenser.item.sound as la_song_file and then la_song_file.is_open then
-				source.queue_sound(la_song_file)
+			if attached song_dispenser.item as la_song then
+				if not la_song.is_loaded then
+					la_song.load
+				end
+				if attached la_song.sound as la_sound then
+					source.queue_sound(la_sound)
+				end
 				song_changes_actions.call(song_dispenser.item)
 			else
 				error.set_loading_audio_error
@@ -207,8 +217,11 @@ feature {NONE} -- Implementation
 	song_dispenser: DISPENSER[SONG]
 			-- Dispenser of songs to play
 
-	song_list: LINKED_LIST[SONG]
-			-- The list of all music files to play
+	playing_song_list: LINKED_QUEUE[SONG]
+			-- The list of songs currently playing
+
+	original_song_list: LINKED_LIST[SONG]
+			-- The original list of all songs to play
 
 	source: AUDIO_SOURCE
 			-- The source of audio
