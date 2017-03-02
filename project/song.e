@@ -17,9 +17,6 @@ feature {NONE} -- Initialization
 			-- Initializes `Current's default values
 		do
 			create error.make
-			title := ""
-			artist := ""
-			duration := 0.0
 		end
 
 	make_from_string(a_file: READABLE_STRING_GENERAL)
@@ -27,7 +24,6 @@ feature {NONE} -- Initialization
 		do
 			make
 			file_path := a_file
-			sound := get_audio_sound(file_path)
 		end
 
 	make_from_path(a_path: PATH)
@@ -38,10 +34,41 @@ feature {NONE} -- Initialization
 
 feature {ANY} -- Access
 
+	is_valid: BOOLEAN
+			-- Checks whether or not the sound file is a valid and supported sound file
+		local
+			l_sound: detachable METADATA_AUDIO_SOUND
+		do
+			l_sound := get_audio_sound
+			Result := error.is_no_error
+		end
+
+	is_loaded: BOOLEAN
+			-- Checks whether or not the sound file is loaded
+		do
+			Result := attached sound as la_sound and then la_sound.is_open
+		end
+
+	load
+			-- Opens the sound file
+		do
+			sound := get_audio_sound
+		end
+
 	fetch_song_information
 			-- Gathers metadata about the song file
 		do
-
+			if attached {MPG_SOUND_FILE} sound as la_mpg then
+				la_mpg.scan
+			end
+			if attached sound as la_sound then
+				album := la_sound.album
+				artist := la_sound.artist
+				comment := la_sound.comment
+				date := la_sound.date
+				genre := la_sound.genre
+				title := la_sound.title
+			end
 		end
 
 	error: ERROR_CODE
@@ -50,27 +77,36 @@ feature {ANY} -- Access
 	file_path: READABLE_STRING_GENERAL
 			-- Path to the song file
 
-	sound: detachable AUDIO_SOUND
+	sound: detachable METADATA_AUDIO_SOUND
 			-- Audio data of `Current'
 
-	title: READABLE_STRING_GENERAL
-			-- Title of `Current'
+	album: detachable READABLE_STRING_GENERAL
+			-- Album metadata of the sound file
 
-	artist: READABLE_STRING_GENERAL
-			-- Artist of `Current'
+	artist: detachable READABLE_STRING_GENERAL
+			-- Artist metadata of the sound file
 
-	duration: REAL_32
-			-- Duration of `Current' in seconds
+	comment: detachable READABLE_STRING_GENERAL
+			-- Comment metadata of the sound file
+
+	date: detachable READABLE_STRING_GENERAL
+			-- Date metadata of the sound file
+
+	genre: detachable READABLE_STRING_GENERAL
+			-- Genre metadata of the sound file
+
+	title: detachable READABLE_STRING_GENERAL
+			-- Title metadata of the sound file
 
 feature {NONE} -- Implementation
 
-	get_audio_sound(a_file: READABLE_STRING_GENERAL): detachable AUDIO_SOUND
+	get_audio_sound: detachable METADATA_AUDIO_SOUND
 			-- Returns the appropriate {AUDIO_SOUND} implementation for `a_file'
 		local
 			l_audio: AUDIO_SOUND_FILE
 			l_mp3: MPG_SOUND_FILE
 		do
-			create l_mp3.make(a_file)
+			create l_mp3.make(file_path)
 			if l_mp3.is_openable then
 				l_mp3.open
 				if l_mp3.is_open then
@@ -78,7 +114,7 @@ feature {NONE} -- Implementation
 				end
 			end
 			if not attached Result then
-				create l_audio.make(a_file)
+				create l_audio.make(file_path)
 				if l_audio.is_openable then
 					l_audio.open
 					if l_audio.is_open then
