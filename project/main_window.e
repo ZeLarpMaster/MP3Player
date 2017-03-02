@@ -118,6 +118,7 @@ feature {NONE} -- Implementation
 		do
 			if not a_dialog.directory.is_empty then
 				player.add_folder(a_dialog.directory)
+				player.play
 			end
 		end
 
